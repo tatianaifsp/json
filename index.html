@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Controle de Estoque Simples</title>
+  <style>
+    /* Estilos da página */
+    body { font-family: Arial; padding: 20px; }  /* Define a fonte e o padding do corpo da página */
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }  /* Estilo da tabela, incluindo borda e espaçamento */
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }  /* Define bordas, padding e alinhamento para células da tabela */
+    th { background-color: #f2f2f2; }  /* Define a cor de fundo das células de cabeçalho */
+    input, button { padding: 5px; margin-right: 10px; }  /* Estilo para inputs e botões */
+  </style>
+</head>
+<body>
+
+  <h1>Controle de Estoque</h1>
+
+  <!-- Formulário para cadastrar produtos -->
+  <form id="formCadastro">
+    <input type="text" id="nomeProduto" placeholder="Nome do produto" required>  <!-- Campo de texto para o nome do produto -->
+    <input type="number" id="quantidadeProduto" placeholder="Quantidade" required min="0">  <!-- Campo numérico para a quantidade -->
+    <input type="submit" value="Cadastrar Produto">  <!-- Botão para enviar o formulário -->
+  </form>
+
+  <!-- Tabela para mostrar o estoque -->
+  <table>
+    <thead>
+      <tr>
+        <th>Produto</th>  <!-- Cabeçalho para o nome do produto -->
+        <th>Quantidade</th>  <!-- Cabeçalho para a quantidade -->
+        <th>+</th>  <!-- Cabeçalho para adicionar quantidade -->
+        <th>-</th>  <!-- Cabeçalho para remover quantidade -->
+      </tr>
+    </thead>
+    <tbody id="tabelaEstoque"></tbody>  <!-- Corpo da tabela onde os produtos serão listados -->
+  </table>
+
+  <script>
+    // Simulação dos dados de um arquivo JSON (aqui usamos uma variável para armazenar os produtos)
+    let produtos = [
+      { id: 1, nome: "Camiseta", quantidade: 10 },  // Produto inicial 1
+      { id: 2, nome: "Calça Jeans", quantidade: 5 },  // Produto inicial 2
+      { id: 3, nome: "Tênis", quantidade: 8 }  // Produto inicial 3
+    ];
+
+    // Função para salvar os dados de estoque no localStorage (armazenamento local do navegador)
+    function salvarLocal() {
+      localStorage.setItem("estoque", JSON.stringify(produtos));  // Converte o array para JSON e salva no localStorage
+    }
+
+    // Função para carregar os dados salvos no localStorage
+    function carregarLocal() {
+      const salvo = localStorage.getItem("estoque");  // Pega os dados salvos no localStorage
+      if (salvo) {  // Se os dados existirem
+        produtos = JSON.parse(salvo);  // Converte o JSON de volta para objeto
+      }
+    }
+
+    // Função para atualizar a tabela com os dados atuais do estoque
+    function atualizarTabela() {
+      const tabela = document.getElementById("tabelaEstoque");  // Pega o corpo da tabela
+      tabela.innerHTML = "";  // Limpa a tabela para evitar duplicação dos dados
+
+      produtos.forEach(produto => {  // Para cada produto no array 'produtos'
+        const linha = document.createElement("tr");  // Cria uma nova linha
+        linha.innerHTML = `
+          <td>${produto.nome}</td>  <!-- Exibe o nome do produto -->
+          <td>${produto.quantidade}</td>  <!-- Exibe a quantidade do produto -->
+          <td><button onclick="alterarQuantidade(${produto.id}, 1)">+</button></td>  <!-- Botão para adicionar 1 ao estoque -->
+          <td><button onclick="alterarQuantidade(${produto.id}, -1)">-</button></td>  <!-- Botão para remover 1 do estoque -->
+        `;
+        tabela.appendChild(linha);  // Adiciona a linha criada à tabela
+      });
+    }
+
+    // Função para alterar a quantidade de um produto (aumentar ou diminuir)
+    function alterarQuantidade(id, delta) {
+      const produto = produtos.find(p => p.id === id);  // Encontra o produto pelo id
+      if (produto) {  // Se o produto for encontrado
+        produto.quantidade = Math.max(0, produto.quantidade + delta);  // Aumenta ou diminui a quantidade, sem permitir quantidade negativa
+        salvarLocal();  // Salva os dados atualizados no localStorage
+        atualizarTabela();  // Atualiza a tabela
+      }
+    }
+
+    // Evento que é acionado quando o formulário é submetido
+    document.getElementById("formCadastro").addEventListener("submit", function(e) {
+      e.preventDefault();  // Previne o comportamento padrão de envio do formulário (que recarregaria a página)
+
+      const nome = document.getElementById("nomeProduto").value.trim();  // Pega o nome do produto
+      const quantidade = parseInt(document.getElementById("quantidadeProduto").value);  // Pega a quantidade e a converte para número
+
+      // Verifica se o nome não está vazio e se a quantidade é válida
+      if (nome && !isNaN(quantidade)) {
+        const novo = {  // Cria um novo objeto de produto
+          id: produtos.length ? produtos[produtos.length - 1].id + 1 : 1,  // Gera um novo id baseado no maior id atual
+          nome,
+          quantidade
+        };
+        produtos.push(novo);  // Adiciona o novo produto ao array
+        salvarLocal();  // Salva os dados atualizados no localStorage
+        atualizarTabela();  // Atualiza a tabela com o novo produto
+        this.reset();  // Limpa os campos do formulário
+      }
+    });
+
+    carregarLocal();  // Carrega os dados do localStorage ao abrir a página
+    atualizarTabela();  // Atualiza a tabela com os dados carregados
+  </script>
+
+</body>
+</html>
